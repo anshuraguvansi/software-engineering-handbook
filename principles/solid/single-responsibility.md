@@ -49,6 +49,19 @@ class PaymentManager {
 }
 ``` 
 
+### Python
+```python
+class PaymentManager:
+    def make_cash_payment(self, amount) -> None:
+        # handle cash payment
+        # raise Exception("Cash payment failed")
+        pass
+
+    def make_visa_payment(self, amount) -> None:
+        # handle visa payment using Visa SDK
+        pass
+``` 
+
 This implementation is violating the Single Responsibility Principle. Why? Because now there are two actors that can bring change to this class: one is when the finance department changes cash reconciliation logic, and the other is any change in the Visa SDK.
 
 **Actor means the source of a change request, like the finance team, compliance team, or SDK vendor.**
@@ -113,6 +126,7 @@ func (pm *PaymentManager) PayUsing(method PaymentMethod, amount float64) error {
     return method.MakePayment(amount)
 }
 ```
+
 ### TypeScript
 ```typescript
 interface PaymentMethod {
@@ -137,5 +151,29 @@ class PaymentManager {
   }
 }
 ```
+
+### Python
+```python
+from abc import ABC, abstractmethod
+
+class PaymentMethod(ABC):
+    @abstractmethod
+    def make_payment(self, amount) -> None:
+        pass
+
+class CashPayment(PaymentMethod):
+    def make_payment(self, amount) -> None:
+        #  cash payment logic
+        pass
+
+class VisaPayment(PaymentMethod):
+    def make_payment(self, amount) -> None:
+        #  visa payment logic
+        pass
+
+class PaymentManager:
+    def make_payment(self, method: PaymentMethod, amount) -> None:
+        method.make_payment(amount)
+``` 
 
 Now you see `PaymentManager` does only one job: it orchestrates execution. It does not know how Cash or Visa works. It only knows that they work. By separating Cash and Visa into their own classes, the code becomes much easier to test, read, and modify.

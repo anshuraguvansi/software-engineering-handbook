@@ -63,6 +63,27 @@ class TwoFactorPaymentDecorator implements PaymentMethod {
 }
 ```
 
+### Python
+```python
+from abc import ABC, abstractmethod
+
+class PaymentMethod(ABC):
+    @abstractmethod
+    def make_payment(self, amount) -> None:
+        pass
+
+class TwoFactorPaymentDecorator(PaymentMethod):
+    def __init__(self, wrapped: PaymentMethod):
+        self.wrapped = wrapped
+
+    def user_confirmed_2fa(self) -> bool:
+        return False
+
+    def make_payment(self, amount) -> None:
+        if self.user_confirmed_2fa():
+            self.wrapped.make_payment(amount)
+``` 
+
 If you look at the `TwoFactorPaymentDecorator`, you may have noticed that in case of 2FA failure the method silently returns, which doesn't honor the contract. To fix this, the method should throw an error.
 
 ```swift
@@ -124,3 +145,25 @@ class TwoFactorPaymentDecorator implements PaymentMethod {
     }
 }
 ```
+
+### Python
+```python
+from abc import ABC, abstractmethod
+
+class PaymentMethod(ABC):
+    @abstractmethod
+    def make_payment(self, amount) -> None:
+        pass
+
+class TwoFactorPaymentDecorator(PaymentMethod):
+    def __init__(self, wrapped: PaymentMethod):
+        self.wrapped = wrapped
+
+    def user_confirmed_2fa(self) -> bool:
+        return False
+
+    def make_payment(self, amount) -> None:
+        if not self.user_confirmed_2fa():
+            raise Exception("ErrTwoFactorDeclined") # contract honored -- caller can react
+        self.wrapped.make_payment(amount)
+``` 
