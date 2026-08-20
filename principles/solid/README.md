@@ -1,4 +1,6 @@
-**SOLID** principles are five object-oriented design principles that help developers build maintainable and scalable software.
+## SOLID Principles
+
+SOLID principles are five object-oriented design principles that help developers build maintainable and scalable software.
 
 SOLID stands for:
 
