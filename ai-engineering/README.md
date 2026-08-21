@@ -1,6 +1,6 @@
 # AI Engineering Knowledge Base
 
-Welcome to the AI Engineering repository. This is a structured knowledge base will be covering everything from foundational Large Language Model (LLM) concepts to advanced production frameworks like Retrieval-Augmented Generation (RAG) and Multi-Agent Systems.
+Welcome to the AI Engineering repository. This is a structured knowledge base that covers everything from foundational Large Language Model (LLM) concepts to advanced production frameworks like Retrieval-Augmented Generation (RAG) and multi-agent systems.
 
 ---
 
@@ -8,7 +8,8 @@ Welcome to the AI Engineering repository. This is a structured knowledge base wi
 
 ### 1. Core Fundamentals
 
-* **[LLM Fundamentals](llm-fundamentals.md)**: Core architectures, inference lifecycles, and basic model mechanics.
+* **[LLM Fundamentals](llm-fundamentals.md)**: Tokenization, context windows, sampling controls, and message-role mechanics.
+* **[Core Model Architectures](core-model-architectures.md)**: Transformer basics, attention, positional information, and model family patterns.
 
 ### 2. System Design and Evaluation
 
