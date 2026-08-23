@@ -8,6 +8,7 @@ Welcome to the AI Engineering repository. This is a structured knowledge base th
 
 ### 1. Core Fundamentals
 
+* **[Artificial Intelligence](artificial-intelligence.md)**: High-level AI foundations, major AI approaches, and how ML, DL, and Generative AI relate.
 * **[LLM Fundamentals](llm-fundamentals.md)**: Tokenization, context windows, sampling controls, and message-role mechanics.
 * **[Core Model Architectures](core-model-architectures.md)**: Transformer basics, attention, positional information, and model family patterns.
 
