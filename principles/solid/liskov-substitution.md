@@ -6,6 +6,7 @@ LSP violations are almost never about method signatures (the compiler enforces t
 
 Let's understand this with an example. In our previous payment method, let's say we got a new requirement to provide support for two-factor authentication for the payment.
 
+### swift
 ```swift
 protocol PaymentMethod {
     /// Throws if payment cannot be completed for any reason.
@@ -23,6 +24,7 @@ final class TwoFactorPaymentDecorator: PaymentMethod {
 }
 ```
 
+### golang
 ```golang
 type PaymentMethod interface {
     // Returns an error if payment cannot be completed for any reason.
@@ -42,6 +44,7 @@ func (tf *TwoFactorPaymentDecorator) MakePayment(amount float64) error {
 }
 ```
 
+### typescript
 ```typescript 
 interface PaymentMethod {
   makePayment(amount: number): void
@@ -86,6 +89,7 @@ class TwoFactorPaymentDecorator(PaymentMethod):
 
 If you look at the `TwoFactorPaymentDecorator`, you may have noticed that in case of 2FA failure the method silently returns, which doesn't honor the contract. To fix this, the method should throw an error.
 
+### swift
 ```swift
 protocol PaymentMethod {
     /// Throws if payment cannot be completed for any reason.
@@ -106,6 +110,7 @@ final class TwoFactorPaymentDecorator: PaymentMethod {
 }
 ```
 
+### golang
 ```golang
 type PaymentMethod interface {
     // Returns an error if payment cannot be completed for any reason.
@@ -124,7 +129,7 @@ func (tf *TwoFactorPaymentDecorator) MakePayment(amount float64) error {
     return tf.wrapped.MakePayment(amount)
 }
 ```
-
+### typescript
 ```typescript 
 interface PaymentMethod {
   makePayment(amount: number): void
