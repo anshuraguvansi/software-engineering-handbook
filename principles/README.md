@@ -6,3 +6,5 @@ This section covers core software engineering principles used to design maintain
 
 1. [SOLID](solid/README.md)
 2. [DRY](dry.md)
+3. [KISS](kiss.md)
+4. [YAGNI](yagni.md)
