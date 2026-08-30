@@ -18,6 +18,10 @@ The idea is simple: do not build features, abstractions, or code for future poss
 - Remove speculative logic that has no current consumer.
 - Prefer small, incremental changes over big predictive designs.
 
+## Example
+
+If your product currently supports only email login, a YAGNI approach is to implement email login well first. Building social login, SSO, and multi-tenant auth before any confirmed requirement would add unnecessary complexity.
+
 ## Important Clarification
 
 YAGNI does **not** mean ignoring planning. It means avoiding speculative implementation and building when actual needs are confirmed.

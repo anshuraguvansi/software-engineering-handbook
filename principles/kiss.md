@@ -18,6 +18,10 @@ The idea is to avoid unnecessary complexity and over-engineering. Choose the sim
 - Optimize for readability before cleverness.
 - Add complexity only when there is clear evidence it is needed.
 
+## Example
+
+For a simple contact form, a KISS approach is to validate required fields and email format with straightforward checks. A non-KISS approach would be creating a full validation framework with plugins and custom rule engines before there is a real need.
+
 ## Important Clarification
 
 KISS does **not** mean writing naive or low-quality code. It means designing thoughtfully and keeping complexity under control.
