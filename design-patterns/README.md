@@ -20,3 +20,6 @@ They are not copy-paste code. Instead, they are proven templates for structuring
 
 - [Factory Pattern](creational/factory.md)
 - [Abstract Factory Pattern](creational/abstract-factory.md)
+- [Builder Pattern](creational/builder.md)
+- [Singleton Pattern](creational/singleton.md)
+- [Prototype Pattern](creational/prototype.md)
