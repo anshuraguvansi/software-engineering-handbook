@@ -23,3 +23,11 @@ They are not copy-paste code. Instead, they are proven templates for structuring
 - [Builder Pattern](creational/builder.md)
 - [Singleton Pattern](creational/singleton.md)
 - [Prototype Pattern](creational/prototype.md)
+
+### Structural
+
+- [Adapter Pattern](structural/adapter.md)
+- [Decorator Pattern](structural/decorator.md)
+- [Facade Pattern](structural/facade.md)
+- [Proxy Pattern](structural/proxy.md)
+- [Composite Pattern](structural/composite.md)
