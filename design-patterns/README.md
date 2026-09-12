@@ -16,6 +16,15 @@ They are not copy-paste code. Instead, they are proven templates for structuring
 - [Creational](creational/)
 - [Structural](structural/)
 
+### Behavioral
+
+- [Strategy Pattern](behavioral/strategy.md)
+- [Observer Pattern](behavioral/observer.md)
+- [Command Pattern](behavioral/command.md)
+- [State Pattern](behavioral/state.md)
+- [Chain of Responsibility Pattern](behavioral/chain-of-responsibility.md)
+- [Template Method Pattern](behavioral/template-method.md)
+
 ### Creational
 
 - [Factory Pattern](creational/factory.md)
