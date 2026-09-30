@@ -14,318 +14,250 @@ Use a builder when:
 
 ## Problem
 
-Suppose we are building a reporting feature. A report always needs a title and data source, but its date range, grouping, format, charts, filters, and recipient are optional.
+Suppose we are building a SQL query. A query always needs a table, but it may also include selected fields, filtering conditions, sorting, and a row limit.
 
-Passing every possible value to a constructor produces a fragile and difficult-to-read API. As options grow, callers must remember parameter order and supply placeholder values for settings they do not need.
+Passing every possible value to a constructor makes the call difficult to read. Callers must remember parameter order, provide empty collections for options they do not need, and assemble the SQL string themselves.
 
 ### Swift
 ```swift
-struct Report {
-    let title: String
-    let dataSource: String
-    let startDate: Date?
-    let endDate: Date?
-    let groupBy: String?
-    let includeCharts: Bool
-    let format: String
-    let recipientEmail: String?
+struct SQLQuery {
+    let statement: String
 }
 
-let report = Report(
-    title: "Monthly sales",
-    dataSource: "orders",
-    startDate: nil,
-    endDate: nil,
-    groupBy: "region",
-    includeCharts: true,
-    format: "pdf",
-    recipientEmail: nil
+let query = SQLQuery(
+    statement: "SELECT id, name FROM users WHERE active = true AND role = 'admin' ORDER BY name LIMIT 20"
 )
 ```
 
 ### Go
 ```go
-package main
-
-import "time"
-
-type Report struct {
-	Title          string
-	DataSource     string
-	StartDate      *time.Time
-	EndDate        *time.Time
-	GroupBy        string
-	IncludeCharts  bool
-	Format         string
-	RecipientEmail string
+type SQLQuery struct {
+	Statement string
 }
 
-report := Report{
-	Title:         "Monthly sales",
-	DataSource:    "orders",
-	GroupBy:       "region",
-	IncludeCharts: true,
-	Format:        "pdf",
+query := SQLQuery{
+	Statement: "SELECT id, name FROM users WHERE active = true AND role = 'admin' ORDER BY name LIMIT 20",
 }
 ```
 
 ### TypeScript
 ```typescript
-class Report {
-  constructor(
-    public title: string,
-    public dataSource: string,
-    public startDate?: Date,
-    public endDate?: Date,
-    public groupBy?: string,
-    public includeCharts = false,
-    public format = "csv",
-    public recipientEmail?: string,
-  ) {}
+class SQLQuery {
+  constructor(public readonly statement: string) {}
 }
 
-const report = new Report(
-  "Monthly sales",
-  "orders",
-  undefined,
-  undefined,
-  "region",
-  true,
-  "pdf",
+const query = new SQLQuery(
+  "SELECT id, name FROM users WHERE active = true AND role = 'admin' ORDER BY name LIMIT 20",
 )
 ```
 
 ### Python
 ```python
-from datetime import date
+from dataclasses import dataclass
 
 
-class Report:
-    def __init__(
-        self,
-        title: str,
-        data_source: str,
-        start_date: date | None = None,
-        end_date: date | None = None,
-        group_by: str | None = None,
-        include_charts: bool = False,
-        report_format: str = "csv",
-        recipient_email: str | None = None,
-    ) -> None:
-        self.title = title
-        self.data_source = data_source
-        self.start_date = start_date
-        self.end_date = end_date
-        self.group_by = group_by
-        self.include_charts = include_charts
-        self.report_format = report_format
-        self.recipient_email = recipient_email
+@dataclass(frozen=True)
+class SQLQuery:
+    statement: str
 
 
-report = Report(
-    "Monthly sales",
-    "orders",
-    group_by="region",
-    include_charts=True,
-    report_format="pdf",
+query = SQLQuery(
+    "SELECT id, name FROM users WHERE active = true AND role = 'admin' ORDER BY name LIMIT 20"
 )
 ```
 
 This design has a few problems:
 
-- constructor calls become long and difficult to understand
-- optional values can be supplied in the wrong position
-- adding a new option changes the constructor API
-- validation rules are scattered between callers and the object
-- partially configured objects can be created accidentally
+- query construction is one long, hard-to-read expression
+- callers must format SQL correctly and in the right order
+- optional values require empty arrays, `nil`, or placeholder arguments
+- validation rules are scattered between callers and the query object
+- adding a new clause changes the constructor API
 
 ## Solution
 
-Introduce a builder that collects configuration through small, named methods. The builder keeps the construction process separate from the final object and creates the report only after required values and validation rules are satisfied.
+Introduce a builder that collects query configuration through small, named methods. The builder owns the order in which SQL clauses are assembled and creates the final query only after required values and validation rules are satisfied.
 
-The resulting call reads like a description of the object being built.
+The resulting call reads like a description of the query being built.
 
 ### Swift
 ```swift
-struct Report {
-    let title: String
-    let dataSource: String
-    let groupBy: String?
-    let includeCharts: Bool
-    let format: String
-    let recipientEmail: String?
+struct SQLQuery {
+    let statement: String
 }
 
-final class ReportBuilder {
-    private let title: String
-    private let dataSource: String
-    private var groupBy: String?
-    private var includeCharts = false
-    private var format = "csv"
-    private var recipientEmail: String?
+final class SQLQueryBuilder {
+    private var selectFields: [String] = ["*"]
+    private var table: String = ""
+    private var conditions: [String] = []
+    private var orderBy: String?
+    private var limitCount: Int?
 
-    init(title: String, dataSource: String) {
-        self.title = title
-        self.dataSource = dataSource
-    }
-
-    func groupedBy(_ value: String) -> ReportBuilder {
-        groupBy = value
+    func select(_ fields: String...) -> SQLQueryBuilder {
+        selectFields = fields.isEmpty ? ["*"] : fields
         return self
     }
 
-    func withCharts() -> ReportBuilder {
-        includeCharts = true
+    func from(_ table: String) -> SQLQueryBuilder {
+        self.table = table
         return self
     }
 
-    func asFormat(_ value: String) -> ReportBuilder {
-        format = value
+    func whereCondition(_ condition: String) -> SQLQueryBuilder {
+        conditions.append(condition)
         return self
     }
 
-    func sentTo(_ email: String) -> ReportBuilder {
-        recipientEmail = email
+    func orderBy(_ field: String) -> SQLQueryBuilder {
+        self.orderBy = field
         return self
     }
 
-    func build() -> Report {
-        Report(
-            title: title,
-            dataSource: dataSource,
-            groupBy: groupBy,
-            includeCharts: includeCharts,
-            format: format,
-            recipientEmail: recipientEmail
-        )
+    func limit(_ count: Int) -> SQLQueryBuilder {
+        limitCount = count
+        return self
+    }
+
+    func build() -> SQLQuery {
+        precondition(!table.isEmpty, "A table is required")
+        precondition(limitCount == nil || limitCount! > 0, "Limit must be positive")
+
+        var statement = "SELECT \(selectFields.joined(separator: ", ")) FROM \(table)"
+        if !conditions.isEmpty {
+            statement += " WHERE " + conditions.joined(separator: " AND ")
+        }
+        if let orderBy {
+            statement += " ORDER BY \(orderBy)"
+        }
+        if let limitCount {
+            statement += " LIMIT \(limitCount)"
+        }
+        return SQLQuery(statement: statement)
     }
 }
 
-let report = ReportBuilder(title: "Monthly sales", dataSource: "orders")
-    .groupedBy("region")
-    .withCharts()
-    .asFormat("pdf")
+let query = SQLQueryBuilder()
+    .select("id", "name")
+    .from("users")
+    .whereCondition("active = true")
+    .whereCondition("role = 'admin'")
+    .orderBy("name")
+    .limit(20)
     .build()
 ```
 
 ### Go
 ```go
-package main
+import (
+	"fmt"
+	"strings"
+)
 
-type Report struct {
-	Title          string
-	DataSource     string
-	GroupBy        string
-	IncludeCharts  bool
-	Format         string
-	RecipientEmail string
+type SQLQuery struct {
+	Statement string
 }
 
-type ReportBuilder struct {
-	report Report
+type SQLQueryBuilder struct {
+	selectFields []string
+	table        string
+	conditions   []string
+	orderBy      string
+	limitCount   *int
 }
 
-func NewReportBuilder(title string, dataSource string) *ReportBuilder {
-	return &ReportBuilder{
-		report: Report{
-			Title:      title,
-			DataSource: dataSource,
-			Format:     "csv",
-		},
+func NewSQLQueryBuilder() *SQLQueryBuilder {
+	return &SQLQueryBuilder{selectFields: []string{"*"}}
+}
+
+func (b *SQLQueryBuilder) Select(fields ...string) *SQLQueryBuilder {
+	if len(fields) > 0 { b.selectFields = fields }
+	return b
+}
+
+func (b *SQLQueryBuilder) From(table string) *SQLQueryBuilder {
+	b.table = table
+	return b
+}
+
+func (b *SQLQueryBuilder) Where(condition string) *SQLQueryBuilder {
+	b.conditions = append(b.conditions, condition)
+	return b
+}
+
+func (b *SQLQueryBuilder) OrderBy(field string) *SQLQueryBuilder {
+	b.orderBy = field
+	return b
+}
+
+func (b *SQLQueryBuilder) Limit(count int) *SQLQueryBuilder {
+	b.limitCount = &count
+	return b
+}
+
+func (b *SQLQueryBuilder) Build() SQLQuery {
+	if b.table == "" { panic("a table is required") }
+	statement := fmt.Sprintf("SELECT %s FROM %s", strings.Join(b.selectFields, ", "), b.table)
+	if len(b.conditions) > 0 { statement += " WHERE " + strings.Join(b.conditions, " AND ") }
+	if b.orderBy != "" { statement += " ORDER BY " + b.orderBy }
+	if b.limitCount != nil {
+		if *b.limitCount <= 0 { panic("limit must be positive") }
+		statement += fmt.Sprintf(" LIMIT %d", *b.limitCount)
 	}
+	return SQLQuery{Statement: statement}
 }
 
-func (b *ReportBuilder) GroupedBy(value string) *ReportBuilder {
-	b.report.GroupBy = value
-	return b
-}
-
-func (b *ReportBuilder) WithCharts() *ReportBuilder {
-	b.report.IncludeCharts = true
-	return b
-}
-
-func (b *ReportBuilder) AsFormat(value string) *ReportBuilder {
-	b.report.Format = value
-	return b
-}
-
-func (b *ReportBuilder) SentTo(email string) *ReportBuilder {
-	b.report.RecipientEmail = email
-	return b
-}
-
-func (b *ReportBuilder) Build() Report {
-	return b.report
-}
-
-report := NewReportBuilder("Monthly sales", "orders").
-	GroupedBy("region").
-	WithCharts().
-	AsFormat("pdf").
+query := NewSQLQueryBuilder().
+	Select("id", "name").
+	From("users").
+	Where("active = true").
+	Where("role = 'admin'").
+	OrderBy("name").
+	Limit(20).
 	Build()
 ```
 
 ### TypeScript
 ```typescript
-class Report {
-  constructor(
-    public readonly title: string,
-    public readonly dataSource: string,
-    public readonly groupBy?: string,
-    public readonly includeCharts = false,
-    public readonly format = "csv",
-    public readonly recipientEmail?: string,
-  ) {}
+class SQLQuery {
+  constructor(public readonly statement: string) {}
 }
 
-class ReportBuilder {
-  private groupBy?: string
-  private includeCharts = false
-  private format = "csv"
-  private recipientEmail?: string
+class SQLQueryBuilder {
+  private selectFields = ["*"]
+  private table = ""
+  private conditions: string[] = []
+  private orderByField?: string
+  private limitCount?: number
 
-  constructor(
-    private readonly title: string,
-    private readonly dataSource: string,
-  ) {}
-
-  groupedBy(value: string): this {
-    this.groupBy = value
+  select(...fields: string[]): this {
+    if (fields.length > 0) this.selectFields = fields
     return this
   }
+  from(table: string): this { this.table = table; return this }
+  where(condition: string): this { this.conditions.push(condition); return this }
+  orderBy(field: string): this { this.orderByField = field; return this }
+  limit(count: number): this { this.limitCount = count; return this }
 
-  withCharts(): this {
-    this.includeCharts = true
-    return this
-  }
-
-  asFormat(value: string): this {
-    this.format = value
-    return this
-  }
-
-  sentTo(email: string): this {
-    this.recipientEmail = email
-    return this
-  }
-
-  build(): Report {
-    return new Report(
-      this.title,
-      this.dataSource,
-      this.groupBy,
-      this.includeCharts,
-      this.format,
-      this.recipientEmail,
-    )
+  build(): SQLQuery {
+    if (!this.table) throw new Error("A table is required")
+    if (this.limitCount !== undefined && this.limitCount <= 0) {
+      throw new Error("Limit must be positive")
+    }
+    let statement = `SELECT ${this.selectFields.join(", ")} FROM ${this.table}`
+    if (this.conditions.length > 0) statement += ` WHERE ${this.conditions.join(" AND ")}`
+    if (this.orderByField) statement += ` ORDER BY ${this.orderByField}`
+    if (this.limitCount !== undefined) statement += ` LIMIT ${this.limitCount}`
+    return new SQLQuery(statement)
   }
 }
 
-const report = new ReportBuilder("Monthly sales", "orders")
-  .groupedBy("region")
-  .withCharts()
-  .asFormat("pdf")
+const query = new SQLQueryBuilder()
+  .select("id", "name")
+  .from("users")
+  .where("active = true")
+  .where("role = 'admin'")
+  .orderBy("name")
+  .limit(20)
   .build()
 ```
 
@@ -335,73 +267,69 @@ from dataclasses import dataclass
 
 
 @dataclass(frozen=True)
-class Report:
-    title: str
-    data_source: str
-    group_by: str | None
-    include_charts: bool
-    report_format: str
-    recipient_email: str | None
+class SQLQuery:
+    statement: str
 
 
-class ReportBuilder:
-    def __init__(self, title: str, data_source: str) -> None:
-        self._title = title
-        self._data_source = data_source
-        self._group_by: str | None = None
-        self._include_charts = False
-        self._report_format = "csv"
-        self._recipient_email: str | None = None
+class SQLQueryBuilder:
+    def __init__(self) -> None:
+        self._select_fields = ["*"]
+        self._table = ""
+        self._conditions: list[str] = []
+        self._order_by: str | None = None
+        self._limit_count: int | None = None
 
-    def grouped_by(self, value: str) -> "ReportBuilder":
-        self._group_by = value
+    def select(self, *fields: str) -> "SQLQueryBuilder":
+        if fields: self._select_fields = list(fields)
+        return self
+    def from_table(self, table: str) -> "SQLQueryBuilder":
+        self._table = table
+        return self
+    def where(self, condition: str) -> "SQLQueryBuilder":
+        self._conditions.append(condition)
+        return self
+    def order_by(self, field: str) -> "SQLQueryBuilder":
+        self._order_by = field
+        return self
+    def limit(self, count: int) -> "SQLQueryBuilder":
+        self._limit_count = count
         return self
 
-    def with_charts(self) -> "ReportBuilder":
-        self._include_charts = True
-        return self
-
-    def as_format(self, value: str) -> "ReportBuilder":
-        self._report_format = value
-        return self
-
-    def sent_to(self, email: str) -> "ReportBuilder":
-        self._recipient_email = email
-        return self
-
-    def build(self) -> Report:
-        return Report(
-            title=self._title,
-            data_source=self._data_source,
-            group_by=self._group_by,
-            include_charts=self._include_charts,
-            report_format=self._report_format,
-            recipient_email=self._recipient_email,
-        )
+    def build(self) -> SQLQuery:
+        if not self._table: raise ValueError("A table is required")
+        if self._limit_count is not None and self._limit_count <= 0:
+            raise ValueError("Limit must be positive")
+        statement = f"SELECT {', '.join(self._select_fields)} FROM {self._table}"
+        if self._conditions: statement += " WHERE " + " AND ".join(self._conditions)
+        if self._order_by: statement += f" ORDER BY {self._order_by}"
+        if self._limit_count is not None: statement += f" LIMIT {self._limit_count}"
+        return SQLQuery(statement)
 
 
-report = (
-    ReportBuilder("Monthly sales", "orders")
-    .grouped_by("region")
-    .with_charts()
-    .as_format("pdf")
-    .build()
-)
+query = (SQLQueryBuilder()
+    .select("id", "name")
+    .from_table("users")
+    .where("active = true")
+    .where("role = 'admin'")
+    .order_by("name")
+    .limit(20)
+    .build())
 ```
 
 ## Why This Is Better
 
-- named builder methods make optional configuration clear at the call site
-- callers provide only the values they need
-- default values are centralized in one place
-- validation can happen before the final object is returned
-- the final object can be immutable because configuration is handled by the builder
+- named builder methods make each SQL clause clear at the call site
+- the builder assembles clauses in the correct SQL order
+- callers provide only the options they need
+- default values, such as `SELECT *`, are centralized in one place
+- validation happens before the final query is returned
+- the final query can be immutable because configuration is handled by the builder
 
 ## Relationship With SOLID
 
-- **Single Responsibility Principle:** the builder handles construction while the product represents the completed object.
-- **Open/Closed Principle:** new optional configuration can usually be added as a builder method without changing existing calls.
-- **Dependency Inversion Principle:** a director or service can depend on a builder abstraction when it must support different product representations.
+- **Single Responsibility Principle:** the builder handles query construction while the product represents the completed SQL query.
+- **Open/Closed Principle:** new optional clauses can usually be added as builder methods without changing existing calls.
+- **Dependency Inversion Principle:** a service can depend on a builder abstraction when it must support different query representations or database dialects.
 
 ## When To Use It
 
@@ -422,4 +350,5 @@ report = (
 - A builder is especially useful when optional parameters keep growing over time.
 - Fluent methods should return the builder so calls can be chained clearly.
 - Builders are often combined with immutable value objects: mutate the builder during setup, then return an immutable product from `build()`.
+- In production SQL builders, values should be parameterized rather than interpolated directly into the query string.
 - In languages with named parameters or option structs, those features can be a lighter alternative for simple cases.
